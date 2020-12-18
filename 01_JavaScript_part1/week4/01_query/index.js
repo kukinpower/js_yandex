@@ -5,13 +5,16 @@
  */
 function query(collection) {
     var clone = JSON.parse(JSON.stringify(collection));
-    console.log(clone);
     if (arguments.length === 1)
         return clone;
     if (arguments.length > 1)
     {
-        for (var i = arguments.length - 1; i > 0; i--) {
-            clone = arguments[i](clone);
+        var args = [...arguments];
+        args.shift();
+        let functions = args.sort();
+        functions;
+        for (var i = 0; i < functions.length; i++) {
+            clone = functions[i](clone);
         }
         return clone;
     }
@@ -27,14 +30,24 @@ function select() {
     return function select(collection) {
         var ret = [];
 
-        for (var i = 0; i < collection.length; i++) {
-            var obj = {};
-            for (var j = 0; j < args.length; j++) {
-                obj[args[j]] = collection[i][args[j]];
+        if (args.length > 0) {
+            for (var i = 0; i < collection.length; i++) {
+
+                var obj = {};
+                var collectionKeys = Object.keys(collection[i]);
+
+                for (var j = 0; j < args.length; j++) {
+                    for (var k = 0; k < collectionKeys.length; k++) {
+                        if (args[j] === collectionKeys[k]) {
+                            obj[args[j]] = collection[i][args[j]];
+                        }
+                    }
+                }
+                ret.push(obj);
             }
-            ret.push(obj);
+            return ret;
         }
-        return ret;
+        return collection;
     }
 }
 
@@ -46,11 +59,18 @@ function filterIn(property, values) {
     return function filterIn(collection) {
         var ret = [];
 
+
         for (var i = 0; i < collection.length; i++) {
-            for (var j = 0; j < values.length; j++) {
-                if (collection[i][property] === values[j]) {
+            if (Array.isArray(values)) {
+                for (var j = 0; j < values.length; j++) {
+                    if (collection[i][property] === values[j]) {
+                        ret.push(collection[i]);
+                        break ;
+                    }
+                }
+            } else {
+                if (collection[i][property] === values) {
                     ret.push(collection[i]);
-                    break ;
                 }
             }
         }
